@@ -1,0 +1,13 @@
+{
+  "name": "samo-discord",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "amilz.sol <85324096+amilz@users.noreply.github.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@solana/spl-token": "^0.2.0",
+    "@solana/web3.js": "^1.47.3",
+    "discord.js": "^13.8.1",
+    "dotenv": "^16.0.1"
+  }
+}
