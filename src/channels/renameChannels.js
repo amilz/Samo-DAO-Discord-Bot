@@ -1,9 +1,34 @@
 const { LAMPORTS_PER_SOL, PublicKey } = require("@solana/web3.js");
+const { formatNumber } = require("../utility/helpers");
 const { SOLANA_CONNECTION } = require("../utility/network");
 
-//TO DO Update with Config/env
-const VAULT_ADDRESS = '7iCV5tQ1nNjpxwdcSpCHCM5Sbmhs4oHkFjfZWa7zYCmf';
-const VOICE_CHANNEL_ID = '993211469292376204';
+/**
+ * Model will run through all the tokens in this list and 
+ * update the respective channel based on current account balance
+ * Must have channel, balance, token address, and token label
+ */
+const TOKEN_DETAIL = {
+    sol: {
+        channel: '994396923635191808',
+        balance: 0,
+        address: '7iCV5tQ1nNjpxwdcSpCHCM5Sbmhs4oHkFjfZWa7zYCmf',
+        label: 'SOL'
+    },
+    usdc: {
+        channel: '996221864236023808',
+        balance: 0,
+        address: 'ED2M5j7Bc51YnhbWgDiStzadxRBN2XiQDtKW3W2sV7VP',
+        label: 'USDC',
+        mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+    },
+    samo: {
+        channel: '996221790986706965',
+        balance: 0,
+        address: 'HX68eFni5VyZvRsyupSVR9MxYyV2TrDskKTNy5jbFVSw',
+        label: 'SAMO',
+        mint: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'
+    }
+}
 
 const renameChannels = async (guild) => {
     
@@ -25,44 +50,42 @@ const renameChannels = async (guild) => {
             else {
                 console.log('No name change required.');
             }
-
         }
         catch {
-            console.log('Error setting name.');
+            console.error('Error setting name.');
         }
     }
-
     const lamportsToSol = (lamports) => {
         return lamports/LAMPORTS_PER_SOL;
     }
 
     const generateChannelName = (number, unit) => {
         try {
-            const newValue = (Math.round(number)).toLocaleString();
-            const newName = unit + ' Balance: ' +  newValue;
+            const newValue = formatNumber(number);
+            const newName = unit + ': ' +  newValue;
             return newName;
         }
         catch {
-            console.log('error')
+            console.error('error');
         }
     }
-    const onLaunch = async () => {
-        const newSolBalance = lamportsToSol(await SOLANA_CONNECTION.getBalance(new PublicKey(VAULT_ADDRESS)));
-        updateChannel(VOICE_CHANNEL_ID, generateChannelName(newSolBalance,'SOL'));
+    const checkAndUpdateNames = async () => {
+        for (const token in TOKEN_DETAIL) {
+            const { address, label, channel } = TOKEN_DETAIL[token];
+            let { balance } = TOKEN_DETAIL[token];
+            balance = token === 'sol' 
+                ? lamportsToSol(await SOLANA_CONNECTION.getBalance(new PublicKey(address)))
+                : (await SOLANA_CONNECTION.getTokenAccountBalance(new PublicKey(address))).value.uiAmount;
+            updateChannel(channel, generateChannelName(balance, label));
+        }
     }
-    onLaunch();
+    checkAndUpdateNames();
 
-    SOLANA_CONNECTION.onAccountChange(new PublicKey(VAULT_ADDRESS),(accountInfo)=>{
-        console.log(`----Account change detected for Wallet: ${VAULT_ADDRESS}.----`)
-        const newSolBalance = lamportsToSol(accountInfo.lamports);
-        updateChannel(VOICE_CHANNEL_ID, generateChannelName(newSolBalance,'SOL'));
+    SOLANA_CONNECTION.onAccountChange(new PublicKey(TOKEN_DETAIL.sol.address),(accountInfo)=>{
+        console.log(`----Account change detected for Wallet: ${TOKEN_DETAIL.sol.address}.----`);
+        checkAndUpdateNames();
     },'finalized');
-    
-
-
-
 }
-
 module.exports = {renameChannels};
 
 

@@ -1,16 +1,12 @@
 require('dotenv').config({path: '../.env'});
-const {Discord, Guild, Client, Channel, GuildMemberManager, Intents} = require('discord.js');
-const {exec} = require('child_process');
-const { getAccountBalance } = require('./utility/solana');
-const { SOLANA_CONNECTION } = require('./utility/network');
+const { Client, Intents} = require('discord.js');
 const { renameChannels } = require('./channels/renameChannels');
 const DISCORD_API_TOKEN = process.env.DISCORD_API_TOKEN;
 
-const GUILD_ID = '896470658169569310';
+const GUILD_ID = '993950691037040691';
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
-
 
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
